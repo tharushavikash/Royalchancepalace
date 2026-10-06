@@ -39,7 +39,7 @@ export interface SiteSettings {
   instagram: string;
 }
 
-export const DEFAULT_HERO_IMAGE = "https://ik.imagekit.io/Tharusha/unnamed.png";
+export const DEFAULT_HERO_IMAGE = "https://ik.imagekit.io/Tharusha/467475986_18071338552715668_5118050733254819873_n.jpg";
 export const DEFAULT_LOGO = "https://ik.imagekit.io/Tharusha/449786402_1240430587231689_7007042046674150158_n.jpg";
 
 export const defaultSettings: SiteSettings = {
