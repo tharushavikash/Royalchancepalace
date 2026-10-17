@@ -43,26 +43,26 @@ export default function Navbar() {
           : "bg-gradient-to-b from-black/70 via-black/40 to-transparent py-4"
       }`}
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           
-          {/* Logo & Full Brand Name */}
-          <Link to="/" className="flex items-center gap-3">
+          {/* Logo & Full Brand Name (Visible on all screens) */}
+          <Link to="/" className="flex items-center gap-2.5">
             <img
               src={settings.logo}
               alt="Royal Chance Palace Logo"
-              className="h-11 w-11 rounded-full object-cover ring-2 ring-amber-500 shadow-md"
+              className="h-10 w-10 sm:h-11 sm:w-11 rounded-full object-cover ring-2 ring-amber-500 shadow-md shrink-0"
             />
             <div className="flex flex-col">
               <span
-                className={`text-base sm:text-lg font-bold tracking-tight leading-tight transition-colors ${
+                className={`text-xs sm:text-lg font-bold tracking-tight leading-tight transition-colors ${
                   isScrolled ? "text-gray-900" : "text-white"
                 }`}
               >
                 Royal Chance
               </span>
               <span
-                className={`text-xs font-semibold uppercase tracking-wider transition-colors ${
+                className={`text-[10px] sm:text-xs font-semibold uppercase tracking-wider transition-colors ${
                   isScrolled ? "text-amber-600" : "text-amber-400"
                 }`}
               >
