@@ -5,8 +5,22 @@ import { loadSettings } from "../data/defaultData";
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [settings, setSettings] = useState<any>({});
   const location = useLocation();
-  const settings = loadSettings();
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await loadSettings();
+        if (data) {
+          setSettings(data);
+        }
+      } catch (error) {
+        console.error("Error loading settings:", error);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -14,13 +28,14 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
   const navLinks = [
     { to: "/", label: "Home" },
+    { to: "/about", label: "About Us" }, 
+    { to: "/wedding", label: "Wedding" }, 
     { to: "/packages", label: "Packages" },
     { to: "/gallery", label: "Gallery" },
     { to: "/contact", label: "Contact" },
@@ -38,11 +53,13 @@ export default function Navbar() {
         <div className="flex h-16 sm:h-20 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 sm:gap-3 group">
-            <img
-              src={settings.logo}
-              alt={settings.businessName}
-              className="h-10 w-10 sm:h-14 sm:w-14 rounded-full object-cover ring-2 ring-amber-400 shadow-lg transition-transform group-hover:scale-105"
-            />
+            {settings?.logo && (
+              <img
+                src={settings.logo}
+                alt={settings.businessName || "Royal Chance Palace"}
+                className="h-10 w-10 sm:h-14 sm:w-14 rounded-full object-cover ring-2 ring-amber-400 shadow-lg transition-transform group-hover:scale-105"
+              />
+            )}
             <div className="leading-tight">
               <span
                 className={`block text-sm sm:text-lg font-bold tracking-wide ${
@@ -81,7 +98,7 @@ export default function Navbar() {
               </Link>
             ))}
             <a
-              href={`tel:${settings.phone.replace(/\s/g, "")}`}
+              href={`tel:${settings?.phone?.replace(/\s/g, "") || ""}`}
               className="ml-2 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-amber-500/30 transition-all hover:from-amber-600 hover:to-amber-700 hover:shadow-xl"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -139,13 +156,13 @@ export default function Navbar() {
             </Link>
           ))}
           <a
-            href={`tel:${settings.phone.replace(/\s/g, "")}`}
+            href={`tel:${settings?.phone?.replace(/\s/g, "") || ""}`}
             className="mt-3 flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-3 text-base font-semibold text-white shadow-lg"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
             </svg>
-            Call {settings.phone}
+            Call {settings?.phone || "Us"}
           </a>
         </div>
       </div>

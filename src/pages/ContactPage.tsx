@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { loadSettings } from "../data/defaultData";
+import { loadSettings, defaultSettings, type SiteSettings } from "../data/defaultData";
 
 export default function ContactPage() {
-  const settings = loadSettings();
+  const [settings, setSettings] = useState<SiteSettings>(defaultSettings);
+  const [isLoading, setIsLoading] = useState(true);
   const [formStatus, setFormStatus] = useState<"idle" | "sent">("idle");
   const [formData, setFormData] = useState({
     name: "",
@@ -16,11 +17,24 @@ export default function ContactPage() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+
+    const fetchFirebaseData = async () => {
+      try {
+        const fetchedSettings = await loadSettings();
+        if (fetchedSettings) setSettings(fetchedSettings);
+      } catch (error) {
+        console.error("Error loading settings:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFirebaseData();
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Build a WhatsApp message as a simple "send" mechanism (no backend)
+    // Build a WhatsApp message as a simple "send" mechanism
     const text = encodeURIComponent(
       `*New Booking Inquiry - Royal Chance Palace*\n\n` +
         `👤 Name: ${formData.name}\n` +
@@ -42,6 +56,14 @@ export default function ContactPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-amber-200 border-t-amber-600"></div>
+      </div>
+    );
+  }
+
   const contactCards = [
     {
       icon: (
@@ -50,8 +72,8 @@ export default function ContactPage() {
         </svg>
       ),
       title: "Phone",
-      value: settings.phone,
-      link: `tel:${settings.phone.replace(/\s/g, "")}`,
+      value: settings?.phone || "Loading...",
+      link: `tel:${settings?.phone?.replace(/\s/g, "") || ""}`,
       color: "from-green-500 to-green-600",
     },
     {
@@ -61,8 +83,8 @@ export default function ContactPage() {
         </svg>
       ),
       title: "Email",
-      value: settings.email,
-      link: `mailto:${settings.email}`,
+      value: settings?.email || "Loading...",
+      link: `mailto:${settings?.email || ""}`,
       color: "from-blue-500 to-blue-600",
     },
     {
@@ -73,7 +95,7 @@ export default function ContactPage() {
         </svg>
       ),
       title: "Address",
-      value: `${settings.address}, Sri Lanka`,
+      value: `${settings?.address || "Loading..."}, Sri Lanka`,
       link: "https://maps.google.com/?q=426X+GW+Yakkala,Sri+Lanka",
       color: "from-amber-500 to-amber-600",
     },
@@ -84,7 +106,7 @@ export default function ContactPage() {
         </svg>
       ),
       title: "Opening Hours",
-      value: settings.openingHours,
+      value: settings?.openingHours || "Loading...",
       link: null,
       color: "from-purple-500 to-purple-600",
     },
@@ -97,7 +119,7 @@ export default function ContactPage() {
         <div className="absolute inset-0">
           <img
             src="https://images.pexels.com/photos/35017879/pexels-photo-35017879.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
-            alt=""
+            alt="Contact Us"
             className="h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/55 to-black/75" />
@@ -289,8 +311,8 @@ export default function ContactPage() {
                 </button>
                 <p className="text-center text-xs text-gray-400">
                   Or call us directly at{" "}
-                  <a href={`tel:${settings.phone.replace(/\s/g, "")}`} className="text-amber-600 font-medium">
-                    {settings.phone}
+                  <a href={`tel:${settings?.phone?.replace(/\s/g, "") || ""}`} className="text-amber-600 font-medium">
+                    {settings?.phone || "our number"}
                   </a>
                 </p>
               </form>
@@ -314,21 +336,11 @@ export default function ContactPage() {
 
               {/* Quick Info */}
               <div className="rounded-3xl bg-gradient-to-br from-amber-500 to-amber-600 p-6 sm:p-8 text-white shadow-xl">
-                <h3 className="text-xl font-bold">Royal Chance Palace Banquets</h3>
+                <h3 className="text-xl font-bold">{settings?.businessName || "Royal Chance Palace"}</h3>
                 <p className="mt-2 text-sm text-amber-100 leading-relaxed">
-                  {settings.aboutText}
+                  {settings?.aboutText ? `${settings.aboutText.slice(0, 150)}...` : "Loading description..."}
                 </p>
-                <div className="mt-5 flex flex-wrap gap-2">
-                  <span className="rounded-full bg-white/15 px-3 py-1.5 text-xs font-medium backdrop-blur-sm">
-                    🍽️ Dine-in
-                  </span>
-                  <span className="rounded-full bg-white/15 px-3 py-1.5 text-xs font-medium backdrop-blur-sm">
-                    🥡 Takeaway
-                  </span>
-                  <span className="rounded-full bg-white/15 px-3 py-1.5 text-xs font-medium backdrop-blur-sm">
-                    🛵 Delivery
-                  </span>
-                </div>
+                
                 <div className="mt-5 flex items-center gap-2">
                   <span className="flex text-amber-200">
                     {[...Array(5)].map((_, i) => (
@@ -338,12 +350,12 @@ export default function ContactPage() {
                     ))}
                   </span>
                   <span className="text-sm font-medium">
-                    {settings.rating} ({settings.reviewCount} reviews)
+                    {settings?.rating || "-"} ({settings?.reviewCount || "-"} reviews)
                   </span>
                 </div>
                 <div className="mt-6 flex flex-col sm:flex-row gap-3">
                   <a
-                    href={`tel:${settings.phone.replace(/\s/g, "")}`}
+                    href={`tel:${settings?.phone?.replace(/\s/g, "") || ""}`}
                     className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-amber-700 transition-all hover:bg-amber-50"
                   >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

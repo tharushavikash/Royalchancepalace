@@ -1,7 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import GalleryGrid from "../components/GalleryGrid";
-import { loadSettings, loadPackages, loadGallery } from "../data/defaultData";
+import AboutSection from "../components/AboutSection";
+import GoogleReviews from "../components/GoogleReviews";
+import { loadSettings, loadGallery, defaultSettings, defaultGalleryImages, type SiteSettings, type GalleryImage } from "../data/defaultData";
 
 const services = [
   {
@@ -43,7 +45,7 @@ const services = [
   {
     icon: (
       <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
       </svg>
     ),
     title: "Engagement & Anniversary",
@@ -57,134 +59,197 @@ const services = [
     ),
     title: "Dine-in · Takeaway · Delivery",
     description: "Enjoy our delicious food your way — dine in, take away, or get it delivered.",
-  },
+  }
 ];
 
-const stats = [
-  { value: "286+", label: "Happy Reviews" },
-  { value: "500+", label: "Events Hosted" },
-  { value: "350", label: "Max Capacity" },
-  { value: "4.4", label: "Guest Rating" },
-];
+// Helper to optimize image loading speed
+const getOptimizedUrl = (url: string) => {
+  if (!url) return "";
+  if (url.includes("ik.imagekit.io") && !url.includes("tr=")) return `${url}?tr=w-1200,h-800,q-80,fo-auto`;
+  return url;
+};
 
 export default function Home() {
-  const settings = loadSettings();
-  const packages = loadPackages();
-  const gallery = loadGallery();
+  const [settings, setSettings] = useState<SiteSettings>(defaultSettings);
+  const [gallery, setGallery] = useState<GalleryImage[]>(defaultGalleryImages);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
-  const featuredPackages = packages.filter((p) => p.popular).slice(0, 3);
-  const displayPackages = featuredPackages.length >= 3 ? featuredPackages : packages.slice(0, 3);
+  const dynamicHeroImages = [
+    settings?.heroImage || "https://ik.imagekit.io/Tharusha/467475986_18071338552715668_5118050733254819873_n.jpg?updatedAt=1791307985522",
+    "https://ik.imagekit.io/Tharusha/high_resolution/high_resolution/No%20vehicle.png",
+    "https://ik.imagekit.io/Tharusha/high_resolution/high_resolution/_DJM1599-HDR.jpg",
+    "https://images.pexels.com/photos/16935999/pexels-photo-16935999.jpeg"
+  ];
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    document.title = "Royal Chance Palace Banquets | Luxury Banquet Hall & Wedding Venue in Yakkala";
+
+    const fetchData = async () => {
+      try {
+        const fetchedSettings = await loadSettings();
+        const fetchedGallery = await loadGallery();
+        if (fetchedSettings) setSettings(fetchedSettings);
+        if (fetchedGallery) setGallery(fetchedGallery);
+      } catch (error) {
+        console.error("Error loading home data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
   }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % dynamicHeroImages.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [dynamicHeroImages.length]);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-amber-200 border-t-amber-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white">
-      {/* Hero Section */}
-      <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden">
-        {/* Background Image */}
-        <div className="absolute inset-0">
-          <img
-            src={settings.heroImage}
-            alt={settings.businessName}
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
+      {/* --- REFINED CINEMATIC HERO SECTION --- */}
+      <section className="relative flex min-h-[90vh] sm:min-h-screen items-center justify-center overflow-hidden bg-black">
+        
+        {/* Background Image Slider with Ken Burns Effect */}
+        <div className="absolute inset-0 z-0">
+          {dynamicHeroImages.map((img, index) => (
+            <div
+              key={index}
+              className={`absolute inset-0 transition-opacity duration-[1500ms] ease-in-out ${
+                index === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
+              }`}
+            >
+              <img
+                src={getOptimizedUrl(img)}
+                alt={`Royal Chance Palace Banquet Hall Slide ${index + 1}`}
+                className={`h-full w-full object-cover transition-transform duration-[10000ms] ease-linear ${
+                  index === currentSlide ? "scale-110" : "scale-100"
+                }`}
+                decoding="async"
+                {...(index === 0 ? { fetchPriority: "high" } : { loading: "lazy" })}
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/90" />
+            </div>
+          ))}
         </div>
-
-        {/* Decorative elements */}
-        <div className="absolute top-24 left-8 h-32 w-32 rounded-full bg-amber-500/20 blur-3xl" />
-        <div className="absolute bottom-32 right-8 h-40 w-40 rounded-full bg-amber-400/20 blur-3xl" />
-
-        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center pt-20 pb-16">
-          {/* Rating Badge */}
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 backdrop-blur-md ring-1 ring-white/20">
-            <span className="flex items-center gap-1 text-amber-400">
-              {[...Array(5)].map((_, i) => (
-                <svg key={i} className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                </svg>
-              ))}
+        
+        {/* Text Content */}
+        <div className="relative z-20 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center mt-12 sm:mt-0">
+          
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-amber-500/30 bg-black/40 backdrop-blur-md mb-6 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
             </span>
-            <span className="text-sm font-medium text-white">
-              {settings.rating} · {settings.reviewCount} reviews
+            <span className="text-xs sm:text-sm font-bold uppercase tracking-[0.2em] text-amber-400">
+              Welcome to Luxury
             </span>
           </div>
 
-          <p className="mb-4 text-sm sm:text-base font-medium uppercase tracking-[0.3em] text-amber-300">
-            {settings.tagline}
-          </p>
-
-          <h1 className="mb-6 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight text-white drop-shadow-lg">
-            Royal Chance
-            <span className="block mt-1 bg-gradient-to-r from-amber-300 via-amber-400 to-amber-200 bg-clip-text text-transparent">
-              Palace Banquets
-            </span>
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-white drop-shadow-2xl tracking-tight mb-6">
+            Royal <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-600">Chance</span>
+            <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl mt-2 font-bold">Palace Banquets</span>
           </h1>
-
-          <p className="mx-auto mb-8 max-w-2xl text-base sm:text-lg text-gray-200 leading-relaxed px-4">
-            Celebrate your dream wedding and special moments where elegance, exceptional
-            service, and delicious cuisine come together to create unforgettable memories.
+          
+          <p className="mx-auto max-w-3xl text-lg sm:text-2xl text-gray-200 font-light drop-shadow-lg mb-12">
+            {settings?.heroSubtitle || "Creating Unforgettable Memories in Elegance. The finest modern reception hall in Yakkala."}
           </p>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
             <Link
               to="/packages"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-8 py-3.5 text-base font-semibold text-white shadow-xl shadow-amber-500/30 transition-all hover:from-amber-600 hover:to-amber-700 hover:shadow-2xl hover:-translate-y-0.5"
+              className="w-full sm:w-auto rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-10 py-4 text-sm sm:text-base font-bold uppercase tracking-wider text-white shadow-[0_0_25px_rgba(245,158,11,0.4)] transition-all hover:scale-105 hover:shadow-[0_0_35px_rgba(245,158,11,0.6)]"
             >
               View Packages
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              </svg>
             </Link>
             <a
-              href={`tel:${settings.phone.replace(/\s/g, "")}`}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border-2 border-white/60 bg-white/10 px-8 py-3.5 text-base font-semibold text-white backdrop-blur-md transition-all hover:bg-white hover:text-amber-700"
+              href={`tel:${settings?.phone?.replace(/\s/g, "") || ""}`}
+              className="w-full sm:w-auto rounded-full border border-white/40 bg-white/10 backdrop-blur-md px-10 py-4 text-sm sm:text-base font-bold uppercase tracking-wider text-white transition-all hover:bg-white/20 hover:border-white"
             >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
-              </svg>
-              Call Now
+              Contact Us
             </a>
-          </div>
-
-          {/* Info Chips */}
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs sm:text-sm">
-            {[
-              { icon: "📍", text: settings.address },
-              { icon: "🕗", text: settings.openingHours },
-              { icon: "🍽️", text: "Dine-in · Takeaway · Delivery" },
-            ].map((chip, i) => (
-              <span
-                key={i}
-                className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-white backdrop-blur-md ring-1 ring-white/15"
-              >
-                <span>{chip.icon}</span>
-                <span className="max-w-[220px] sm:max-w-none truncate">{chip.text}</span>
-              </span>
-            ))}
           </div>
         </div>
 
-        {/* Scroll indicator */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 animate-bounce">
-          <svg className="h-6 w-6 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center animate-bounce text-white/70 hidden sm:flex">
+          <span className="text-xs uppercase tracking-widest mb-2 font-medium">Scroll to explore</span>
+          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
           </svg>
         </div>
       </section>
 
-      {/* Stats Bar */}
-      <section className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 py-8 sm:py-10">
+      {/* --- STATISTICS BANNER --- */}
+      <section className="bg-black py-12 sm:py-16 border-t border-amber-900/40 relative z-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
-            {stats.map((stat) => (
-              <div key={stat.label}>
-                <p className="text-3xl sm:text-4xl font-bold text-white">{stat.value}</p>
-                <p className="mt-1 text-xs sm:text-sm font-medium uppercase tracking-wider text-amber-100">
-                  {stat.label}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4 text-center divide-y md:divide-y-0 md:divide-x divide-white/10">
+            
+            <div className="flex flex-col items-center justify-center pt-4 md:pt-0">
+              <span className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-amber-300 to-amber-600 mb-2 drop-shadow-md">
+                286+
+              </span>
+              <span className="text-xs sm:text-sm font-bold text-gray-300 uppercase tracking-widest">Happy Reviews</span>
+            </div>
+            
+            <div className="flex flex-col items-center justify-center pt-4 md:pt-0">
+              <span className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-amber-300 to-amber-600 mb-2 drop-shadow-md">
+                500+
+              </span>
+              <span className="text-xs sm:text-sm font-bold text-gray-300 uppercase tracking-widest">Events Hosted</span>
+            </div>
+            
+            <div className="flex flex-col items-center justify-center pt-8 md:pt-0">
+              <span className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-amber-300 to-amber-600 mb-2 drop-shadow-md">
+                400
+              </span>
+              <span className="text-xs sm:text-sm font-bold text-gray-300 uppercase tracking-widest">Max Capacity</span>
+            </div>
+            
+            <div className="flex flex-col items-center justify-center pt-8 md:pt-0">
+              <span className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-amber-300 to-amber-600 mb-2 drop-shadow-md flex items-center justify-center gap-1">
+                4.4
+                <svg className="h-6 w-6 sm:h-8 sm:w-8 text-amber-500 fill-amber-500" viewBox="0 0 24 24">
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
+              </span>
+              <span className="text-xs sm:text-sm font-bold text-gray-300 uppercase tracking-widest">Guest Rating</span>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* Services Section */}
+      <section className="py-20 sm:py-28 bg-gray-50">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Our Services & Event Solutions</h2>
+            <div className="mt-4 h-1 w-20 bg-amber-500 mx-auto rounded-full"></div>
+            <p className="mt-6 text-gray-600 max-w-2xl mx-auto">
+              We provide a versatile array of event solutions tailored perfectly to your specific requirements.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {services.map((service, index) => (
+              <div key={index} className="group p-8 rounded-3xl bg-white border border-gray-100 shadow-sm transition-all hover:-translate-y-2 hover:shadow-xl">
+                <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 transition-colors group-hover:bg-amber-500 group-hover:text-white">
+                  {service.icon}
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{service.title}</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  {service.description}
                 </p>
               </div>
             ))}
@@ -193,239 +258,63 @@ export default function Home() {
       </section>
 
       {/* About Section */}
-      <section className="py-16 sm:py-24 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            {/* Images */}
-            <div className="relative">
-              <div className="aspect-[4/3] overflow-hidden rounded-3xl shadow-2xl">
-                <img
-                  src={gallery[0]?.url}
-                  alt="Royal Chance Palace"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <div className="absolute -bottom-6 -right-4 sm:-right-8 w-40 sm:w-56 aspect-[4/3] overflow-hidden rounded-3xl border-8 border-white shadow-2xl hidden sm:block">
-                <img
-                  src={gallery[2]?.url}
-                  alt="Hall interior"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <div className="absolute -top-6 -left-4 sm:-left-8 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 px-5 py-4 text-white shadow-xl">
-                <p className="text-2xl sm:text-3xl font-bold">15+</p>
-                <p className="text-xs sm:text-sm text-amber-100">Years of Excellence</p>
-              </div>
-            </div>
-
-            {/* Text */}
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-amber-600">
-                About Us
-              </p>
-              <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-gray-900">
-                Welcome to {settings.businessName}
-              </h2>
-              <p className="mt-5 text-gray-600 leading-relaxed">{settings.aboutText}</p>
-
-              <ul className="mt-7 space-y-3">
-                {[
-                  "Elegant, customizable banquet halls",
-                  "Expert chefs & exquisite cuisine",
-                  "Dedicated event coordination team",
-                  "Premium decoration & ambiance",
-                ].map((item) => (
-                  <li key={item} className="flex items-center gap-3 text-gray-700">
-                    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
-                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                      </svg>
-                    </span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link
-                  to="/contact"
-                  className="inline-flex items-center gap-2 rounded-full bg-gray-900 px-7 py-3 text-sm font-semibold text-white transition-all hover:bg-gray-800"
-                >
-                  Book Your Event
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                  </svg>
-                </Link>
-                <Link
-                  to="/gallery"
-                  className="inline-flex items-center gap-2 rounded-full border-2 border-amber-500 px-7 py-3 text-sm font-semibold text-amber-600 transition-all hover:bg-amber-50"
-                >
-                  View Gallery
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Services Section */}
-      <section className="py-16 sm:py-24 bg-gradient-to-b from-amber-50 to-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto">
-            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-amber-600">
-              What We Offer
-            </p>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-gray-900">
-              Our Services
-            </h2>
-            <p className="mt-4 text-gray-600">
-              From intimate gatherings to grand celebrations — we make every occasion unforgettable.
-            </p>
-          </div>
-
-          <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((service) => (
-              <div
-                key={service.title}
-                className="group rounded-2xl bg-white p-6 sm:p-8 shadow-md ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:ring-amber-200"
-              >
-                <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 text-amber-600 transition-colors group-hover:from-amber-500 group-hover:to-amber-600 group-hover:text-white">
-                  {service.icon}
-                </div>
-                <h3 className="mt-5 text-lg font-bold text-gray-900">{service.title}</h3>
-                <p className="mt-2 text-sm text-gray-600 leading-relaxed">{service.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Packages */}
-      <section className="py-16 sm:py-24 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-amber-600">
-                Our Packages
-              </p>
-              <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-gray-900">
-                Featured Packages
-              </h2>
-            </div>
-            <Link
-              to="/packages"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-amber-600 hover:text-amber-700"
-            >
-              View All Packages
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              </svg>
-            </Link>
-          </div>
-
-          <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-            {displayPackages.map((pkg) => (
-              <div
-                key={pkg.id}
-                className="group relative flex flex-col overflow-hidden rounded-3xl bg-white shadow-lg ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
-              >
-                {pkg.popular && (
-                  <div className="absolute top-4 right-4 z-10 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-3 py-1 text-xs font-bold text-white shadow-lg">
-                    Most Popular
-                  </div>
-                )}
-                <div className="aspect-[16/10] overflow-hidden">
-                  <img
-                    src={pkg.image}
-                    alt={pkg.name}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
-                <div className="flex flex-1 flex-col p-6">
-                  <p className="text-xs font-medium uppercase tracking-wider text-amber-600">
-                    {pkg.capacity}
-                  </p>
-                  <h3 className="mt-1 text-xl font-bold text-gray-900">{pkg.name}</h3>
-                  <p className="mt-2 text-sm text-gray-600 line-clamp-2">{pkg.description}</p>
-                  <div className="mt-4 flex items-baseline gap-1">
-                    <span className="text-2xl font-bold text-gray-900">{pkg.currency}</span>
-                    <span className="text-2xl font-bold text-amber-600">{pkg.price}</span>
-                  </div>
-                  <Link
-                    to="/packages"
-                    className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-amber-600"
-                  >
-                    View Details
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <AboutSection />
 
       {/* Gallery Preview */}
-      <section className="py-16 sm:py-24 bg-gradient-to-b from-amber-50 to-white">
+      <section className="py-20 sm:py-28 bg-gray-50 border-t border-gray-100">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto">
-            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-amber-600">
-              Gallery
-            </p>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-gray-900">
-              Moments at Royal Chance
-            </h2>
-            <p className="mt-4 text-gray-600">
-              A glimpse into the beautiful celebrations we've had the honor to host.
-            </p>
-          </div>
-          <div className="mt-12">
-            <GalleryGrid images={gallery} limit={8} />
-          </div>
-          <div className="mt-10 text-center">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
+            <div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Captured Moments & Gallery</h2>
+              <div className="mt-4 h-1 w-20 bg-amber-500 rounded-full"></div>
+            </div>
             <Link
               to="/gallery"
-              className="inline-flex items-center gap-2 rounded-full border-2 border-amber-500 px-8 py-3 text-sm font-semibold text-amber-600 transition-all hover:bg-amber-500 hover:text-white"
+              className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-amber-600 hover:text-amber-700"
             >
               View Full Gallery
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
               </svg>
             </Link>
           </div>
+          <GalleryGrid images={gallery.slice(0, 6)} />
         </div>
       </section>
 
+      {/* Google Reviews */}
+      <GoogleReviews />
+
       {/* CTA Section */}
-      <section className="relative py-16 sm:py-24 overflow-hidden">
-        <div className="absolute inset-0">
+      <section className="relative py-20 sm:py-28 overflow-hidden bg-black">
+        <div className="absolute inset-0 opacity-40">
           <img
-            src={gallery[1]?.url}
-            alt=""
+            src="https://images.pexels.com/photos/16935999/pexels-photo-16935999.jpeg"
+            alt="Royal Chance Palace Banquet Hall Setup"
             className="h-full w-full object-cover"
+            loading="lazy"
+            decoding="async"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/80" />
         </div>
-        <div className="relative z-10 mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white">
-            Ready to Celebrate at Royal Chance Palace?
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
+        
+        <div className="relative z-10 mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6">
+            Ready to plan your dream event?
           </h2>
-          <p className="mt-4 text-gray-200">
-            Contact us today to book your date and let us make your special occasion truly
-            unforgettable.
+          <p className="text-lg text-gray-300 mb-10 max-w-2xl mx-auto">
+            Contact our expert team today to schedule a venue tour and discuss how we can make your celebration truly unforgettable.
           </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
             <a
-              href={`tel:${settings.phone.replace(/\s/g, "")}`}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-8 py-3.5 text-base font-semibold text-white shadow-xl transition-all hover:from-amber-600 hover:to-amber-700"
+              href={`tel:${settings?.phone?.replace(/\s/g, "") || ""}`}
+              className="rounded-full bg-amber-500 px-8 py-4 text-base font-bold uppercase tracking-wider text-white shadow-lg transition-all hover:bg-amber-600 hover:scale-105"
             >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
-              </svg>
-              {settings.phone}
+              Call {settings?.phone || "Us"}
             </a>
             <Link
               to="/contact"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border-2 border-white/60 bg-white/10 px-8 py-3.5 text-base font-semibold text-white backdrop-blur-md transition-all hover:bg-white hover:text-amber-700"
+              className="rounded-full border-2 border-white px-8 py-4 text-base font-bold uppercase tracking-wider text-white transition-all hover:bg-white hover:text-black"
             >
               Send a Message
             </Link>
