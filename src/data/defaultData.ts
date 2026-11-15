@@ -76,13 +76,13 @@ export const defaultSettings: SiteSettings = {
   facebook: "https://facebook.com/royalchancepalace",
   instagram: "https://instagram.com/royalchancepalace",
   
-  priceChart100: "655,000.00, 700,000.00, 765,000.00",
-  priceChart150: "785,000.00, 855,000.00, 950,000.00",
-  priceChart200: "985,000.00, 1,075,000.00, 1,205,000.00",
-  priceChart250: "1,195,000.00, 1,305,000.00, 1,470,000.00",
-  priceChart300: "1,415,000.00, 1,545,000.00, 1,745,000.00",
-  priceChart350: "1,610,000.00, 1,765,000.00, 1,995,000.00",
-  priceChart400: "1,830,000.00, 2,010,000.00, 2,270,000.00",
+  priceChart100: "655000.00 | 700000.00 | 765000.00",
+  priceChart150: "785000.00 | 855000.00 | 950000.00",
+  priceChart200: "985000.00 | 1075000.00 | 1205000.00",
+  priceChart250: "1195000.00 | 1305000.00 | 1470000.00",
+  priceChart300: "1415000.00 | 1545000.00 | 1745000.00",
+  priceChart350: "1610000.00 | 1765000.00 | 1995000.00",
+  priceChart400: "1830000.00 | 2010000.00 | 2270000.00",
 
   menuSilver: `Welcome Drink | Orange / Mixed Fruit / Mango
 Soup + Baked Bread & Butter (Select 01) | Corn & Egg Drop / Cream of Vegetable / Cream of Mushroom / Cream of Pumpkin
